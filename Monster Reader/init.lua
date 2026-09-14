@@ -591,102 +591,113 @@ local function PresentMonsters()
     local monsterList = GetMonsterList()
     local monsterListCount = table.getn(monsterList)
 
-    local columnCount = 2
-
-    -- Get how many columns we'll need
-    if options.showMonsterID == true then
-        columnCount = columnCount + 1
-    end
-    if options.showMonsterStatus == true then
-        columnCount = columnCount + 1
-    end
-    imgui.Columns(columnCount)
-
-    if options.showMonsterID == true or options.showMonsterStatus == true then
-        local windowWidth = imgui.GetWindowSize()
-        local charWidth = 0.7 * imgui.GetFontSize()
-
-        local nameColumnWidth = #"XXXXXXXX" * charWidth + 10
-        local idColumnWidth = #"XXXX" * charWidth + 10
-        local statusColumnWidth = #"J30 Z30 F P" * charWidth + 10
-
-        if options.showMonsterID == true and options.showMonsterStatus == true then
-            imgui.SetColumnOffset(1, nameColumnWidth)
-            imgui.SetColumnOffset(2, nameColumnWidth + idColumnWidth)
-            imgui.SetColumnOffset(3, windowWidth - statusColumnWidth)
-        elseif options.showMonsterID == true then
-            imgui.SetColumnOffset(1, nameColumnWidth)
-            imgui.SetColumnOffset(2, nameColumnWidth + idColumnWidth)
-        elseif options.showMonsterStatus == true then
-            imgui.SetColumnOffset(1, nameColumnWidth)
-            imgui.SetColumnOffset(2, windowWidth - statusColumnWidth)
-        else
-            imgui.SetColumnOffset(1, nameColumnWidth)
+    realMonster = false
+    for i = 1, monsterListCount, 1 do
+        if monsterList[i].display then
+            realMonster = true
+            break
         end
     end
 
-    local startIndex = 1
-    local endIndex = monsterListCount
-    local step = 1
+    if realMonster then
 
-    if options.invertMonsterList then
-        startIndex = monsterListCount
-        endIndex = 1
-        step = -1
-    end
+        local columnCount = 2
 
-    for i = startIndex, endIndex, step do
-        local monster = monsterList[i]
-        if monster.display then
-            local mHP = monster.HP
-            local mHPMax = monster.HPMax
+        -- Get how many columns we'll need
+        if options.showMonsterID == true then
+            columnCount = columnCount + 1
+        end
+        if options.showMonsterStatus == true then
+            columnCount = columnCount + 1
+        end
+        imgui.Columns(columnCount)
 
-            lib_helpers.TextC(true, monster.color, monster.name)
-            imgui.NextColumn()
+        if options.showMonsterID == true or options.showMonsterStatus == true then
+            local windowWidth = imgui.GetWindowSize()
+            local charWidth = 0.7 * imgui.GetFontSize()
 
-            if options.showMonsterID == true then
-                lib_helpers.Text(true, "%04X", monster.id)
-                imgui.NextColumn()
+            local nameColumnWidth = #"XXXXXXXX" * charWidth + 10
+            local idColumnWidth = #"XXXX" * charWidth + 10
+            local statusColumnWidth = #"J30 Z30 F P" * charWidth + 10
+
+            if options.showMonsterID == true and options.showMonsterStatus == true then
+                imgui.SetColumnOffset(1, nameColumnWidth)
+                imgui.SetColumnOffset(2, nameColumnWidth + idColumnWidth)
+                imgui.SetColumnOffset(3, windowWidth - statusColumnWidth)
+            elseif options.showMonsterID == true then
+                imgui.SetColumnOffset(1, nameColumnWidth)
+                imgui.SetColumnOffset(2, nameColumnWidth + idColumnWidth)
+            elseif options.showMonsterStatus == true then
+                imgui.SetColumnOffset(1, nameColumnWidth)
+                imgui.SetColumnOffset(2, windowWidth - statusColumnWidth)
+            else
+                imgui.SetColumnOffset(1, nameColumnWidth)
             end
+        end
 
-            lib_helpers.imguiProgressBar(true, mHP / mHPMax, -1.0, imgui.GetFontSize(),
-                lib_helpers.HPToGreenRedGradient(mHP / mHPMax), nil, mHP)
-            imgui.NextColumn()
+        local startIndex = 1
+        local endIndex = monsterListCount
+        local step = 1
 
-            if options.showMonsterStatus then
-                local atkTech = lib_characters.GetPlayerTechniqueStatus(monster.address, 0)
-                local defTech = lib_characters.GetPlayerTechniqueStatus(monster.address, 1)
+        if options.invertMonsterList then
+            startIndex = monsterListCount
+            endIndex = 1
+            step = -1
+        end
 
-                if atkTech.type == 0 then
-                    lib_helpers.TextC(true, 0, "    ")
-                else
-                    lib_helpers.TextC(true, 0xFFFF0000,
-                        atkTech.name .. atkTech.level .. string.rep(" ", 2 - #tostring(atkTech.level)) .. " ")
-                end
+        for i = startIndex, endIndex, step do
+            local monster = monsterList[i]
+            if monster.display then
+                local mHP = monster.HP
+                local mHPMax = monster.HPMax
 
-                if defTech.type == 0 then
-                    lib_helpers.TextC(false, 0, "    ")
-                else
-                    lib_helpers.TextC(false, 0xFF0000FF,
-                        defTech.name .. defTech.level .. string.rep(" ", 2 - #tostring(defTech.level)) .. " ")
-                end
-
-                local frozen = lib_characters.GetPlayerFrozenStatus(monster.address)
-                local confused = lib_characters.GetPlayerConfusedStatus(monster.address)
-                local paralyzed = lib_characters.GetPlayerParalyzedStatus(monster.address)
-
-                if frozen then
-                    lib_helpers.TextC(false, 0xFF00FFFF, "F ")
-                elseif confused then
-                    lib_helpers.TextC(false, 0xFFFF00FF, "C ")
-                else
-                    lib_helpers.TextC(false, 0, "  ")
-                end
-                if paralyzed then
-                    lib_helpers.TextC(false, 0xFFFF4000, "P ")
-                end
-
+                lib_helpers.TextC(true, monster.color, monster.name)
                 imgui.NextColumn()
+
+                if options.showMonsterID == true then
+                    lib_helpers.Text(true, "%04X", monster.id)
+                    imgui.NextColumn()
+                end
+
+                lib_helpers.imguiProgressBar(true, mHP / mHPMax, -1.0, imgui.GetFontSize(),
+                    lib_helpers.HPToGreenRedGradient(mHP / mHPMax), nil, mHP)
+                imgui.NextColumn()
+
+                if options.showMonsterStatus then
+                    local atkTech = lib_characters.GetPlayerTechniqueStatus(monster.address, 0)
+                    local defTech = lib_characters.GetPlayerTechniqueStatus(monster.address, 1)
+
+                    if atkTech.type == 0 then
+                        lib_helpers.TextC(true, 0, "    ")
+                    else
+                        lib_helpers.TextC(true, 0xFFFF0000,
+                            atkTech.name .. atkTech.level .. string.rep(" ", 2 - #tostring(atkTech.level)) .. " ")
+                    end
+
+                    if defTech.type == 0 then
+                        lib_helpers.TextC(false, 0, "    ")
+                    else
+                        lib_helpers.TextC(false, 0xFF0000FF,
+                            defTech.name .. defTech.level .. string.rep(" ", 2 - #tostring(defTech.level)) .. " ")
+                    end
+
+                    local frozen = lib_characters.GetPlayerFrozenStatus(monster.address)
+                    local confused = lib_characters.GetPlayerConfusedStatus(monster.address)
+                    local paralyzed = lib_characters.GetPlayerParalyzedStatus(monster.address)
+
+                    if frozen then
+                        lib_helpers.TextC(false, 0xFF00FFFF, "F ")
+                    elseif confused then
+                        lib_helpers.TextC(false, 0xFFFF00FF, "C ")
+                    else
+                        lib_helpers.TextC(false, 0, "  ")
+                    end
+                    if paralyzed then
+                        lib_helpers.TextC(false, 0xFFFF4000, "P ")
+                    end
+
+                    imgui.NextColumn()
+                end
             end
         end
     end
